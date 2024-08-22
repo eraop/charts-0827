@@ -11,6 +11,17 @@ import { _DeepPartialObject } from 'chart.js/dist/types/utils';
 import { mergeObjects } from '../../helpers';
 import { ChartData, ChartEvent, ChartEventType, ChartOptions, EventContext, LegendItem, Position } from '../../types';
 import type { Chart } from '../.internal';
+import { PositionDirection } from '../tooltip';
+import {
+  defaultTooltipOptions,
+  getTooltipArrow,
+  getTooltipContainer,
+  getTooltipElement,
+  getTooltipFooter,
+  resetTooltip,
+  resetTooltipByParent,
+  setPositionDirection,
+} from '../tooltip/tooltip.helper';
 
 export class Legend<TChart extends Chart<ChartData, ChartOptions>> {
   items: LegendItem[] = [];
@@ -120,6 +131,12 @@ export class Legend<TChart extends Chart<ChartData, ChartOptions>> {
         }
         this.chart.rootElement?.dispatchEvent(evt);
       },
+      onLeave: (_cjEvent: CJChartEvent, _cjLegendItem: CJLegendItem, cjLegend: CJLegendElement<CJChartType>) => {
+        this.leaveLegend(cjLegend);
+      },
+      onHover: (_cjEvent: CJChartEvent, cjLegendItem: CJLegendItem, cjLegend: CJLegendElement<CJChartType>) => {
+        this.hoverLegend(cjLegendItem, cjLegend);
+      },
     };
   }
 
@@ -216,5 +233,45 @@ export class Legend<TChart extends Chart<ChartData, ChartOptions>> {
     }
 
     return false;
+  }
+
+  private hoverLegend(cjLegendItem: CJLegendItem, cjLegend: CJLegendElement<CJChartType>): void {
+    const chart = cjLegend.chart;
+    const parentElement = chart.canvas.parentElement;
+    const tooltipOptions = this.chart.options.legend?.tooltip;
+    if (tooltipOptions && parentElement && cjLegend?.legendItems) {
+      const index = cjLegend.legendItems.findIndex((item) => item.text === cjLegendItem.text);
+      if (index === -1) {
+        return;
+      }
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const { left, top, width } = chart.legend.legendHitBoxes[index];
+      const tooltipLeft = left;
+      const tooltipTop = top;
+      const tooltipEl = getTooltipElement(parentElement, tooltipOptions);
+      resetTooltip(tooltipEl);
+      const tooltipContainer = getTooltipContainer(defaultTooltipOptions, this.chart.getCurrentTheme());
+      const footerEl = getTooltipFooter(tooltipOptions, chart);
+      tooltipContainer.addChild(footerEl);
+      const tooltipArrow = getTooltipArrow();
+      tooltipEl.addChild(tooltipArrow);
+      tooltipEl.addChild(tooltipContainer);
+      // display, position, and set styles
+      tooltipEl.setStyle('opacity', '1');
+      tooltipEl.setStyle('left', tooltipLeft + width / 2 + 'px');
+      tooltipEl.setStyle('top', tooltipTop + 'px');
+      //TODO(yiwei): support other legend position
+      // const alignKey = `legend-${cjLegend.position}` as PositionDirection;
+      setPositionDirection(PositionDirection.LegendTop, tooltipEl, this.chart.getCurrentTheme());
+    }
+  }
+
+  private leaveLegend(cjLegend: CJLegendElement<CJChartType>): void {
+    const chart = cjLegend.chart;
+    const parentElement = chart.canvas.parentElement;
+    if (parentElement) {
+      resetTooltipByParent(parentElement);
+    }
   }
 }

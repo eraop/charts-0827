@@ -43,4 +43,8 @@ export const TooltipPositions: {
   [PositionDirection.CenterCenter]: {
     transform: 'translate(-50%, -50%)',
   },
+  [PositionDirection.LegendTop]: {
+    arrow: { top: '100%', left: '50%', borderDirection: 'top', transform: 'translate(-50%, -1px)' },
+    transform: 'translate(-50%, calc(-100% - 6px))',
+  },
 };

@@ -72,6 +72,18 @@ const Example = () =>
         >
           Use Native Tooltip
         </ToggleButton>
+        <ToggleButton
+          checked={others.lt}
+          onChange={() =>
+            toggleOptions(
+              'lt',
+              { legend: { tooltip: { footer: 'Custom footer text', minWidth: '180px' } } },
+              { legend: { tooltip: null } },
+            )
+          }
+        >
+          Use Legend Tooltip
+        </ToggleButton>
       </>
     );
 

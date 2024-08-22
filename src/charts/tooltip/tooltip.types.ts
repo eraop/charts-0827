@@ -18,6 +18,7 @@ export interface TooltipOptions {
   fontSize?: string;
   borderRadius?: string;
   maxWidth?: string;
+  minWidth?: string;
   padding?: string;
   zIndex?: number;
   title?: string | string[] | ((tooltip: CJTooltipModel<CJUnknownChartType>) => string | string[]);
@@ -63,4 +64,5 @@ export enum PositionDirection {
   LeftCenter = 'left-center',
   LeftTop = 'left-top',
   CenterCenter = 'center-center',
+  LegendTop = 'legend-top',
 }
