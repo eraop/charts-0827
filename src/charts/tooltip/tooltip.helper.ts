@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { COMPONENT_PREFIX, Theme } from '../../core';
 import { DomElement, findDomElement, mergeObjects } from '../../helpers';
 import { Position } from '../../types';

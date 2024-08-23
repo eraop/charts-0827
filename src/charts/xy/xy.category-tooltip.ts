@@ -19,6 +19,9 @@ export class CategoryLabelTooltip<TChart extends Chart<ChartData, ChartOptions>>
       id: 'categoryLabelTooltip',
       start: () => {},
       beforeInit: () => {},
+      afterRender: (chart: CJ<ChartType.Bar | ChartType.Line>) => {
+        this.initHitBoxes(chart);
+      },
       afterEvent: (
         chart: CJ<ChartType.Bar | ChartType.Line>,
         event: {
@@ -35,7 +38,6 @@ export class CategoryLabelTooltip<TChart extends Chart<ChartData, ChartOptions>>
           if (!categoryScale) {
             return;
           }
-          this.initHitBoxes();
           const hitBox = this.getHitBoxByXY(x, y);
           if (!hitBox) {
             return;
@@ -113,9 +115,9 @@ export class CategoryLabelTooltip<TChart extends Chart<ChartData, ChartOptions>>
     this.tooltipElement?.setStyle('opacity', 0);
   }
 
-  private initHitBoxes(): void {
-    if (this.chart.api?.scales && this.hitBoxes.length === 0) {
-      const categoryScale = Object.values(this.chart.api?.scales).find((scale) => scale.id === ScaleKeys.CategoryAxis);
+  private initHitBoxes(chart: CJ<ChartType.Bar | ChartType.Line>): void {
+    if (chart.scales && this.hitBoxes.length === 0) {
+      const categoryScale = Object.values(chart.scales).find((scale) => scale.id === ScaleKeys.CategoryAxis);
       if (categoryScale) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.labelSizes = (categoryScale as any)._getLabelSizes() as HitBoxSizes;
