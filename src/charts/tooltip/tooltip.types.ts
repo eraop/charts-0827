@@ -13,21 +13,26 @@ export enum TooltipInteractionAxis {
   XY = 'xy',
 }
 
-export interface TooltipOptions {
-  useNative?: boolean;
+export interface TooltipBaseOptions {
   fontSize?: string;
   borderRadius?: string;
   maxWidth?: string;
   minWidth?: string;
   padding?: string;
   zIndex?: number;
-  title?: string | string[] | ((tooltip: CJTooltipModel<CJUnknownChartType>) => string | string[]);
+  title?: string | string[] | ((a: unknown, b: unknown) => string | string[]);
+  formatTitle?: (title: string) => string;
+  body?: string | ((a: unknown, b: unknown) => string);
+  footer?: string | string[] | ((a: unknown, b: unknown) => string | string[]);
+}
+
+export interface TooltipOptions extends TooltipBaseOptions {
+  useNative?: boolean;
   formatTitle?: (title: string) => string;
   beforeBody?: string | ((tooltip: CJTooltipModel<CJUnknownChartType>) => string);
   formatLabel?: (item: string) => string;
   formatValue?: (value: number, tooltip?: CJTooltipModel<CJUnknownChartType>) => string;
   afterBody?: string | ((tooltip: CJTooltipModel<CJUnknownChartType>) => string);
-  footer?: string | string[] | ((a: unknown) => string | string[]);
   showPercentage?: boolean;
   showUnit?: boolean;
   showTotal?: boolean;
@@ -64,5 +69,4 @@ export enum PositionDirection {
   LeftCenter = 'left-center',
   LeftTop = 'left-top',
   CenterCenter = 'center-center',
-  LegendTop = 'legend-top',
 }

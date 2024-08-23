@@ -77,7 +77,16 @@ const Example = () =>
           onChange={() =>
             toggleOptions(
               'lt',
-              { legend: { tooltip: { footer: 'Custom footer text', minWidth: '180px' } } },
+              {
+                legend: {
+                  tooltip: {
+                    title: 'Custom title',
+                    body: 'Custom body',
+                    footer: 'Custom footer',
+                    minWidth: '150px',
+                  },
+                },
+              },
               { legend: { tooltip: null } },
             )
           }

@@ -3,7 +3,7 @@
  */
 import { Tick, TimeUnit } from 'chart.js';
 import { ChartOptions, Font, JsonData, MarkerStyle, Position, SeriesType, TableData } from '../../types';
-import { TooltipOptions } from '../tooltip';
+import { TooltipBaseOptions } from '../tooltip';
 /**
  * Interface `AxisOptions` provides a set of configurations for the axis in a chart.
  */
@@ -100,8 +100,10 @@ export interface CategoryAxisOptions extends AxisOptions {
    * The supported type is category, but time is not supported.
    */
   labelSelectable?: boolean;
-
-  tooltip?: TooltipOptions;
+  /**
+   * Tooltip of labels on the category axis.
+   */
+  labelTooltip?: TooltipBaseOptions;
   /**
    * Returns the currently selected label and all selected labels.
    * @param label The currently selected label

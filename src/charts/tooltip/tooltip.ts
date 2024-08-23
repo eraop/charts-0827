@@ -6,11 +6,9 @@ import { ChartData, ChartOptions, ChartType, CJUnknownChartType } from '../../ty
 import { Chart } from '../.internal';
 import {
   defaultTooltipOptions,
-  getTooltipArrow,
   getTooltipContainer,
   getTooltipElement,
-  getTooltipFooter,
-  setPositionDirection,
+  setPosition,
   TOOLTIP_CLASS,
 } from './tooltip.helper';
 import { PositionDirection, TooltipItem, TooltipOptions } from './tooltip.types';
@@ -54,7 +52,7 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
   generateTooltipHtml(context: any) {
     // Tooltip Element
     const { chart, tooltip } = context;
-    const tooltipEl = getTooltipElement(chart.canvas.parentElement, this.options);
+    const tooltipEl = getTooltipElement(this.options, chart.canvas.parentElement);
     const chartType = chart.config.type;
 
     // Hide if no tooltip
@@ -63,8 +61,6 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
       return;
     }
 
-    // clear content
-    tooltipEl.clearChildren();
     const tooltipContainer = getTooltipContainer(this.options, this.chart.getCurrentTheme());
     // title
     let titles: string[] = [];
@@ -74,7 +70,7 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
       } else if (Array.isArray(this.options.title)) {
         titles = this.options.title;
       } else if (typeof this.options.title === 'function') {
-        const titleFnResult = this.options.title(tooltip);
+        const titleFnResult = this.options.title(chart, tooltip);
         if (typeof titleFnResult === 'string') {
           titles = [titleFnResult];
         } else if (Array.isArray(titleFnResult)) {
@@ -185,7 +181,7 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
       } else if (Array.isArray(this.options.footer)) {
         footers = this.options.footer;
       } else if (typeof this.options.footer === 'function') {
-        const footerFnResult = this.options.footer(chart);
+        const footerFnResult = this.options.footer(chart, tooltip);
         if (typeof footerFnResult === 'string') {
           footers = [footerFnResult];
         } else if (Array.isArray(footerFnResult)) {
@@ -201,12 +197,6 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
         footerEl.newChild('div').setHtml(text);
       });
     }
-    if (this.options?.footer) {
-      const footerEl = getTooltipFooter(this.options, chart);
-      tooltipContainer.addChild(footerEl);
-    }
-    const arrowEl = getTooltipArrow();
-    tooltipEl.addChild(arrowEl);
     tooltipEl.addChild(tooltipContainer);
     this.setPosition(context, tooltip, tooltipEl);
   }
@@ -226,14 +216,10 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
     left += tooltip.caretX + parseFloat(parentElementPaddingLeft);
     top += tooltip.caretY + parseFloat(parentElementPaddingTop);
     // display, position, and set styles
-    tooltipEl.setStyle('opacity', '1');
-    tooltipEl.setStyle('left', left + 'px');
-    tooltipEl.setStyle('top', top + 'px');
     tooltipEl.setStyle('z-index', this.options.zIndex);
     tooltipEl.setStyle('line-height', '1.5');
-
     const alignKey = `${tooltip.xAlign}-${tooltip.yAlign}` as PositionDirection;
-    setPositionDirection(alignKey, tooltipEl, this.chart.getCurrentTheme());
+    setPosition(alignKey, tooltipEl, left, top, this.chart.getCurrentTheme());
   }
 
   private generateHtmlForIcon(tooltipItem: TooltipItem): DomElement {

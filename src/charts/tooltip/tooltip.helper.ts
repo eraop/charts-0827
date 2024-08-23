@@ -1,5 +1,6 @@
 import { COMPONENT_PREFIX, Theme } from '../../core';
-import { DomElement, findDomElement } from '../../helpers';
+import { DomElement, findDomElement, mergeObjects } from '../../helpers';
+import { Position } from '../../types';
 import { TooltipPositions } from './tooltip.style';
 import { PositionDirection, TooltipOptions } from './tooltip.types';
 
@@ -14,7 +15,70 @@ export const defaultTooltipOptions: TooltipOptions = {
   zIndex: 888,
 };
 
-export function getTooltipElement(parentElement: HTMLElement, options?: TooltipOptions): DomElement {
+export function initTooltip(options: TooltipOptions, theme: Theme, chart: any, target: any): DomElement {
+  const tooltip = getTooltipElement(options, chart.canvas.parentElement);
+  const tooltipContainer = getTooltipContainer(mergeObjects(defaultTooltipOptions, options || {}), theme);
+  if (options?.title) {
+    let titles: string[] = [];
+    if (typeof options.title === 'string') {
+      titles = [options.title];
+    } else if (Array.isArray(options.title)) {
+      titles = options.title;
+    } else if (typeof options.title === 'function') {
+      const titleFnResult = options.title(chart, target);
+      if (typeof titleFnResult === 'string') {
+        titles = [titleFnResult];
+      } else if (Array.isArray(titleFnResult)) {
+        titles = titleFnResult;
+      }
+    }
+    titles.forEach((title: string) => {
+      tooltipContainer
+        ?.newChild('div')
+        .addClass(`${TOOLTIP_CLASS}-title`)
+        .setStyle('font-weight', 'bold')
+        .setText(options.formatTitle ? options.formatTitle(title) : title);
+    });
+  }
+
+  if (options.body) {
+    let body = '';
+    if (typeof options.body === 'string') {
+      body = options.body;
+    } else if (typeof options.body === 'function') {
+      body = options.body(chart, target);
+    }
+    tooltipContainer.newChild('div').addClass(`${TOOLTIP_CLASS}-body`).setHtml(body);
+  }
+
+  if (options?.footer) {
+    let footers: string[] = [];
+    if (typeof options.footer === 'string') {
+      footers = [options.footer];
+    } else if (Array.isArray(options.footer)) {
+      footers = options.footer;
+    } else if (typeof options.footer === 'function') {
+      const footerFnResult = options.footer(chart, target);
+      if (typeof footerFnResult === 'string') {
+        footers = [footerFnResult];
+      } else if (Array.isArray(footerFnResult)) {
+        footers = footerFnResult;
+      }
+    }
+
+    const footerEl = tooltipContainer
+      .newChild('div')
+      .addClass(`${TOOLTIP_CLASS}-footer`)
+      .setStyle('text-align', 'center');
+    footers.forEach((text: string) => {
+      footerEl.newChild('div').setHtml(text);
+    });
+  }
+  tooltip.addChild(tooltipContainer);
+  return tooltip;
+}
+
+export function getTooltipElement(options: TooltipOptions, parentElement: HTMLElement): DomElement {
   let tooltipEl: DomElement | null;
   if (options?.appendToBody) {
     tooltipEl = findDomElement(`#${TOOLTIP_ID}`);
@@ -33,7 +97,6 @@ export function getTooltipElement(parentElement: HTMLElement, options?: TooltipO
     if (options?.appendToBody) {
       tooltipEl.setAttribute('id', TOOLTIP_ID).appendToBody();
     } else {
-      // below will append the tooltip element to container, but it may be cut by container.
       tooltipEl.appendTo(parentElement);
     }
     if (options?.maxWidth) {
@@ -42,15 +105,20 @@ export function getTooltipElement(parentElement: HTMLElement, options?: TooltipO
     if (options?.minWidth) {
       tooltipEl.setStyle('min-width', options.minWidth);
     }
+    tooltipEl.setStyle('z-index', options.zIndex);
   }
 
-  const tooltipArrow = new DomElement('div')
-    .addClass(`${TOOLTIP_CLASS}-arrow`)
-    .setStyle('position', 'absolute')
-    .setStyle('border-style', 'solid')
-    .setStyle('border-color', 'transparent')
-    .setStyle('border-width', '6px');
-  tooltipEl.addChild(tooltipArrow);
+  tooltipEl.clearChildren();
+  tooltipEl.setStyle('opacity', 0);
+  tooltipEl.addChild(
+    new DomElement('div')
+      .addClass(`${TOOLTIP_CLASS}-arrow`)
+      .setStyle('position', 'absolute')
+      .setStyle('border-style', 'solid')
+      .setStyle('border-color', 'transparent')
+      .setStyle('border-width', '6px'),
+  );
+  tooltipEl.setStyle('line-height', '1.5');
   return tooltipEl;
 }
 
@@ -64,37 +132,35 @@ export function getTooltipContainer(options: TooltipOptions, theme: Theme): DomE
     .setStyle('color', theme?.tooltipTextColor);
 }
 
-export function getTooltipArrow(): DomElement {
-  return new DomElement('div')
-    .addClass(`${TOOLTIP_CLASS}-arrow`)
-    .setStyle('position', 'absolute')
-    .setStyle('border-style', 'solid')
-    .setStyle('border-color', 'transparent')
-    .setStyle('border-width', '6px');
-}
-export function getTooltipFooter(options: TooltipOptions, chart: any): DomElement {
-  const footerEl = new DomElement('div').addClass(`${TOOLTIP_CLASS}-footer`).setStyle('text-align', 'center');
-  let footers: string[] = [];
-  if (typeof options.footer === 'string') {
-    footers = [options.footer];
-  } else if (Array.isArray(options.footer)) {
-    footers = options.footer;
-  } else if (typeof options.footer === 'function') {
-    const footerFnResult = options.footer(chart);
-    if (typeof footerFnResult === 'string') {
-      footers = [footerFnResult];
-    } else if (Array.isArray(footerFnResult)) {
-      footers = footerFnResult;
+export function getTooltipBody(options: TooltipOptions, chart: any, item?: any): DomElement {
+  const bodyEle = new DomElement('div').addClass(`${TOOLTIP_CLASS}-body`);
+  let bodyList: string[] = [];
+  if (typeof options.body === 'string') {
+    bodyList = [options.body];
+  } else if (Array.isArray(options.body)) {
+    bodyList = options.body;
+  } else if (typeof options.body === 'function') {
+    const bodyFnResult = options.body(chart, item);
+    if (typeof bodyFnResult === 'string') {
+      bodyList = [bodyFnResult];
+    } else if (Array.isArray(bodyFnResult)) {
+      bodyList = bodyFnResult;
     }
   }
 
-  footers.forEach((text: string) => {
-    footerEl.newChild('div').setHtml(text);
+  bodyList.forEach((text: string) => {
+    bodyEle.newChild('div').setHtml(text);
   });
-  return footerEl;
+  return bodyEle;
 }
 
-export function setPositionDirection(alignKey: PositionDirection, tooltipEl: DomElement, theme: Theme): void {
+export function setPosition(
+  alignKey: PositionDirection,
+  tooltipEl: DomElement,
+  left: number,
+  top: number,
+  theme: Theme,
+): void {
   const arrowEl = findDomElement(`.${TOOLTIP_CLASS}-arrow`, tooltipEl.nativeElement);
   const currentPosition = TooltipPositions[alignKey];
   // Remove caret position
@@ -117,25 +183,19 @@ export function setPositionDirection(alignKey: PositionDirection, tooltipEl: Dom
   } else {
     tooltipEl.addClass('no-transform');
   }
+  tooltipEl.setStyle('left', left + 'px');
+  tooltipEl.setStyle('top', top + 'px');
+  tooltipEl.setStyle('opacity', '1');
 }
 
-export function resetTooltipByParent(parentElement: HTMLElement, options?: TooltipOptions): void {
-  let tooltipEl: DomElement | null;
-  if (options?.appendToBody) {
-    tooltipEl = findDomElement(`#${TOOLTIP_ID}`);
+export function getPositionDirection(position?: Position): PositionDirection {
+  if (position === Position.Right) {
+    return PositionDirection.RightCenter;
+  } else if (position === Position.Left) {
+    return PositionDirection.LeftCenter;
+  } else if (position === Position.Top) {
+    return PositionDirection.CenterTop;
   } else {
-    tooltipEl = findDomElement(`.${TOOLTIP_ID}`, parentElement);
+    return PositionDirection.CenterBottom;
   }
-  resetTooltip(tooltipEl);
-}
-
-export function resetTooltip(tooltipEl: DomElement | null): void {
-  if (!tooltipEl) {
-    return;
-  }
-  tooltipEl.clearChildren();
-  Object.values(PositionDirection).forEach((direction) => {
-    tooltipEl.removeClass(direction);
-  });
-  tooltipEl.setStyle('opacity', 0);
 }
