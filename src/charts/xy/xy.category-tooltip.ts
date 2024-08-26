@@ -17,11 +17,6 @@ export class CategoryLabelTooltip<TChart extends Chart<ChartData, ChartOptions>>
   toCJPlugin(): Plugin {
     return {
       id: 'categoryLabelTooltip',
-      start: () => {},
-      beforeInit: () => {},
-      afterRender: (chart: CJ<ChartType.Bar | ChartType.Line>) => {
-        this.initHitBoxes(chart);
-      },
       afterEvent: (
         chart: CJ<ChartType.Bar | ChartType.Line>,
         event: {
@@ -33,17 +28,18 @@ export class CategoryLabelTooltip<TChart extends Chart<ChartData, ChartOptions>>
         },
       ) => {
         const { type, x, y } = event.event;
-        if (type == 'mousemove' && typeof x === 'number' && typeof y === 'number') {
+        if (type === 'mousemove' && typeof x === 'number' && typeof y === 'number') {
           const categoryScale = Object.values(chart.scales).find((scale) => scale.id === ScaleKeys.CategoryAxis);
           if (!categoryScale) {
             return;
           }
+          this.initHitBoxes(chart);
           const hitBox = this.getHitBoxByXY(x, y);
           if (!hitBox) {
             return;
           }
           this.hoverLabel(categoryScale.position as Position, hitBox);
-        } else if (type == 'mouseout') {
+        } else if (type === 'mouseout') {
           this.leaveLabel();
         }
       },
@@ -106,6 +102,7 @@ export class CategoryLabelTooltip<TChart extends Chart<ChartData, ChartOptions>>
         hitBox.left,
         hitBox.top,
         this.chart.getCurrentTheme(),
+        chart,
       );
       this.tooltipElement = tooltipEl;
     }
@@ -116,7 +113,7 @@ export class CategoryLabelTooltip<TChart extends Chart<ChartData, ChartOptions>>
   }
 
   private initHitBoxes(chart: CJ<ChartType.Bar | ChartType.Line>): void {
-    if (chart.scales && this.hitBoxes.length === 0) {
+    if (chart.scales) {
       const categoryScale = Object.values(chart.scales).find((scale) => scale.id === ScaleKeys.CategoryAxis);
       if (categoryScale) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
