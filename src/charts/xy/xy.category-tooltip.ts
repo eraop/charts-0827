@@ -17,6 +17,9 @@ export class CategoryLabelTooltip<TChart extends Chart<ChartData, ChartOptions>>
   toCJPlugin(): Plugin {
     return {
       id: 'categoryLabelTooltip',
+      beforeUpdate: (_chart: CJ<ChartType.Bar | ChartType.Line>) => {
+        this.tooltipElement?.setStyle('opacity', 0).clearChildren();
+      },
       afterEvent: (
         chart: CJ<ChartType.Bar | ChartType.Line>,
         event: {
